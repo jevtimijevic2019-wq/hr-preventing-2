@@ -1,16 +1,25 @@
 const express = require("express");
 const cors = require("cors");
+
 const nodemailer = require("nodemailer");
 
 const app = express();
 
-app.use(cors({
-  origin: ["https://www.prevent-ing.rs", "https://prevent-ing.rs"],
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
-}));
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
 
+  next();
+});
+
+app.use(cors());
 app.use(express.json());
+
 
 app.post("/api/contact", async (req, res) => {
   try {
@@ -29,10 +38,13 @@ return res.json({
     const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT || 587),
-  secure: String(process.env.SMTP_SECURE || "false") === "true",
+  secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   },
   connectionTimeout: 15000,
   greetingTimeout: 15000,
